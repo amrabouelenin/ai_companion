@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.6.15
+    container_name: open-webui
+    depends_on:
+      - ollama
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+      # - ./config.json:/app/backend/data/config.json
+    restart: always
+    environment:
+      - OLLAMA_API_BASE_URL=http://ollama:11434/api
+      - OLLAMA_BASE_URL=
+      - USE_OLLAMA_DOCKER=true
+    healthcheck:
+      disable: true
+    networks:
+      - ai-network
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '8'
+          memory: 16G
+    networks:
+      - ai-network
+
+volumes:
+  open-webui:
+    name: open-webui
+  ollama:
+    name: ollama
+
+networks:
+  ai-network:
+    driver: bridge
