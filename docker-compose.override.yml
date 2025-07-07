@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  whisper-stt:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    environment:
+      - ASR_MODEL=small
+      - ASR_ENGINE=openai_whisper
+    restart: always
+    ports:
+      - "9000:9000"
+    networks:
+      - ai-network

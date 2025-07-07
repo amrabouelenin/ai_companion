@@ -1,0 +1,72 @@
+@startuml AI Companion System - Component Architecture
+
+' Color and styling
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+' Title
+title AI Companion System - Component Architecture
+
+' Components
+package "Docker Environment" as DockerEnv {
+  [Web Interface] as WebUI <<Web>>
+  [Companion Orchestrator\n(FastAPI on port 8000)] as Orchestrator <<Service>>
+  [Ollama LLM Service\n(port 11434)] as Ollama <<Service>>
+  [MozillaTTS Service\n(port 5002)] as TTS <<Service>>
+  [Whisper STT Service\n(port 9000)] as STT <<Service>>
+  [Open WebUI\n(port 3000)] as OpenWebUI <<Web>>
+}
+
+skinparam component {
+  BackgroundColor<<Web>> #B5CAFB
+  BackgroundColor<<Service>> #85BBF0
+}
+
+' External actor
+actor "User" as user
+
+' Connections
+user --> WebUI : Access via http://localhost:8080
+WebUI -right-> Orchestrator : API calls via http://localhost:8000
+Orchestrator -down-> Ollama : LLM requests\nvia http://ollama:11434/api/generate
+Orchestrator -down-> TTS : TTS requests\nvia http://tts-service:5002/api/tts
+Orchestrator -down-> STT : STT requests\nvia http://stt-service:9000/asr
+user --> OpenWebUI : Direct LLM interface\nhttp://localhost:3000
+
+' Service details
+note right of Orchestrator
+  Endpoints:
+  - /health - Health check endpoint
+  - /chat - Chat with AI companion
+  - /text-to-speech - Convert text to speech
+  - /voice - Convert voice to text
+  - /mode - Set AI companion mode
+  - /models - List available models
+end note
+
+note right of Ollama
+  LLM service using Ollama
+  - Models: mistral, tinyllama, llama2, etc.
+  - API endpoint: /api/generate
+end note
+
+note right of TTS
+  Mozilla TTS Service
+  - Voices: English and French voices
+  - API endpoints: /api/tts, /voices
+end note
+
+note right of STT
+  Whisper STT Service
+  - CPU-based model
+  - API endpoints: /asr
+end note
+
+note right of WebUI
+  Web-based voice interface
+  - Voice recording and playback
+  - Text input
+  - Mode selection
+end note
+
+@enduml

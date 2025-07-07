@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  web-interface:
+    build:
+      context: ./web-interface
+      dockerfile: Dockerfile
+    container_name: web-interface
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    depends_on:
+      - companion-orchestrator
+    networks:
+      - ai-network
+    volumes:
+      - ./web-interface:/app
   open-webui:
     image: ghcr.io/open-webui/open-webui:v0.6.15
     container_name: open-webui
@@ -36,12 +52,61 @@ services:
           memory: 16G
     networks:
       - ai-network
+      
+  tts-service:
+    image: synesthesiam/mozillatts:en
+    container_name: tts-service
+    restart: always
+    ports:
+      - "5002:5002"
+    volumes:
+      - tts_data:/app/data
+    networks:
+      - ai-network
+      
+  whisper-stt:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: whisper-stt
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      - ASR_MODEL=small
+      - ASR_ENGINE=openai_whisper
+    networks:
+      - ai-network
+      
+  companion-orchestrator:
+    build:
+      context: ./companion-orchestrator
+      dockerfile: Dockerfile
+    container_name: companion-orchestrator
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./companion-orchestrator:/app
+    environment:
+      - OLLAMA_API_URL=http://ollama:11434
+      - TTS_SERVICE_URL=http://tts-service:5002
+      - WHISPER_API_URL=http://whisper-stt:9000
+      - DEFAULT_COMPANION_MODE=general
+      - AVAILABLE_MODES=general,french_tutor,motivator,chill_buddy
+    depends_on:
+      - ollama
+      - tts-service
+    networks:
+      - ai-network
 
 volumes:
   open-webui:
     name: open-webui
   ollama:
     name: ollama
+  tts_data:
+    name: tts_data
+  whisper_data:
+    name: whisper_data
 
 networks:
   ai-network:

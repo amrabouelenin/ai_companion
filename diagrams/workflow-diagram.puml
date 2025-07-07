@@ -1,0 +1,109 @@
+@startuml "AI Companion System - Workflow Diagram"
+
+' Styling
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxmessagesize 160
+skinparam sequenceParticipant underline
+
+' Title
+title AI Companion System - Workflow Diagram
+
+' Participants
+actor User
+participant "Web Interface\n(Port 8080)" as WebUI
+participant "Companion Orchestrator\n(Port 8000)" as Orchestrator
+participant "LLM Service\n(Port 11434)" as LLM
+participant "TTS Service\n(Port 5002)" as TTS
+participant "STT Service\n(Port 9000)" as STT
+
+' Main flow - Text Input
+group Text Chat Workflow
+    User -> WebUI: Enter text message
+    activate WebUI
+    WebUI -> Orchestrator: POST /chat\n{text: "user message"}
+    activate Orchestrator
+    Orchestrator -> Orchestrator: Determine current mode
+    Orchestrator -> LLM: POST /api/generate\n{prompt: "context + message"}
+    activate LLM
+    LLM --> Orchestrator: Return generated response
+    deactivate LLM
+    
+    alt Generate Audio Response
+        Orchestrator -> TTS: GET /api/tts\n{text: "AI response", voice: "selected voice"}
+        activate TTS
+        TTS --> Orchestrator: Return WAV audio data
+        deactivate TTS
+        Orchestrator --> WebUI: Return {response: "text", audio_url: "audio data"}
+    else Text-only Response
+        Orchestrator --> WebUI: Return {response: "text"}
+    end
+    
+    deactivate Orchestrator
+    WebUI --> User: Display response and play audio (if available)
+    deactivate WebUI
+end
+
+' Main flow - Voice Input
+group Voice Chat Workflow
+    User -> WebUI: Record voice message
+    activate WebUI
+    WebUI -> WebUI: Encode audio as base64
+    WebUI -> Orchestrator: POST /voice\n{audio: "base64 encoded audio"}
+    activate Orchestrator
+    
+    Orchestrator -> STT: POST /asr\n{audio data}
+    activate STT
+    STT --> Orchestrator: Return transcription
+    deactivate STT
+    
+    Orchestrator -> LLM: POST /api/generate\n{prompt: "context + transcription"}
+    activate LLM
+    LLM --> Orchestrator: Return generated response
+    deactivate LLM
+    
+    Orchestrator -> TTS: GET /api/tts\n{text: "AI response", voice: "selected voice"}
+    activate TTS
+    TTS --> Orchestrator: Return WAV audio data
+    deactivate TTS
+    
+    Orchestrator --> WebUI: Return {response: "text", transcription: "user speech", audio_url: "audio data"}
+    deactivate Orchestrator
+    
+    WebUI --> User: Display transcription, response, and play audio
+    deactivate WebUI
+end
+
+' Mode switching workflow
+group Mode Switching Workflow
+    User -> WebUI: Select mode (e.g., French Tutor)
+    activate WebUI
+    WebUI -> Orchestrator: POST /mode\n{mode: "selected_mode"}
+    activate Orchestrator
+    Orchestrator -> Orchestrator: Update mode context
+    Orchestrator --> WebUI: Return confirmation
+    deactivate Orchestrator
+    WebUI --> User: Display active mode
+    deactivate WebUI
+end
+
+' TTS standalone workflow
+group Text-to-Speech Standalone Workflow
+    User -> WebUI: Request TTS for specific text
+    activate WebUI
+    WebUI -> Orchestrator: POST /text-to-speech\n{text: "text to speak", language: "en/fr"}
+    activate Orchestrator
+    
+    Orchestrator -> TTS: GET /api/tts\n{text: "text to speak", voice: "selected voice"}
+    activate TTS
+    note right: For long text, chunks are processed\nand combined with FFmpeg
+    TTS --> Orchestrator: Return WAV audio data
+    deactivate TTS
+    
+    Orchestrator --> WebUI: Return audio data as StreamingResponse
+    deactivate Orchestrator
+    WebUI --> User: Play audio
+    deactivate WebUI
+end
+
+@enduml

@@ -1,0 +1,119 @@
+@startuml "AI Companion System - Deployment Diagram"
+
+' Styling
+skinparam rectangle {
+  BorderColor #5B9BD5
+  FontColor black
+}
+skinparam database {
+  BorderColor #5B9BD5
+}
+skinparam node {
+  BackgroundColor #E7F0FA
+  BorderColor #5B9BD5
+}
+
+' Title
+title AI Companion System - Deployment Diagram
+
+' Host machine
+node "Host Machine" as Host {
+  ' Docker environment
+  rectangle "Docker Environment" as DockerEnv {
+    ' Docker network
+    rectangle "AI Network (Docker Network)" as DockerNet {
+      node "Companion Orchestrator Container" as OrchestratorNode {
+        [Companion Orchestrator\nFastAPI] as OrchestratorApp
+        [TTS Service Module] as TTS_Module
+        [STT Service Module] as STT_Module
+        [LLM Service Module] as LLM_Module
+        [Mode Manager] as ModeManager
+        
+        OrchestratorApp --> TTS_Module
+        OrchestratorApp --> STT_Module
+        OrchestratorApp --> LLM_Module
+        OrchestratorApp --> ModeManager
+      }
+      
+      node "Web Interface Container" as WebUINode {
+        [Web Interface\nHTML/JS/CSS] as WebUI
+      }
+      
+      node "Ollama Container" as OllamaNode {
+        [Ollama LLM Service] as Ollama
+        database "LLM Models" as LLMModels
+        Ollama --> LLMModels
+      }
+      
+      node "MozillaTTS Container" as TTSNode {
+        [MozillaTTS Service] as TTSService
+        database "TTS Voice Models" as TTSModels
+        TTSService --> TTSModels
+      }
+      
+      node "Whisper STT Container" as STTNode {
+        [Whisper STT Service] as STTService
+        database "Whisper Models" as STTModels
+        STTService --> STTModels
+      }
+      
+      node "Open WebUI Container" as OpenWebUINode {
+        [Open WebUI] as OpenWebUI
+      }
+    }
+  }
+}
+
+' External connections
+actor "User" as user
+
+' Service communication
+OrchestratorApp <--> Ollama : HTTP on port 11434
+OrchestratorApp <--> TTSService : HTTP on port 5002  
+OrchestratorApp <--> STTService : HTTP on port 9000
+
+' User interaction
+user --> WebUI : HTTP on port 8080
+WebUI <--> OrchestratorApp : HTTP on port 8000
+user --> OpenWebUI : HTTP on port 3000
+OpenWebUI <--> Ollama : HTTP on port 11434
+
+' Ports mapping to host
+note right of WebUINode
+  Port mapping: 8080:80
+end note
+
+note right of OrchestratorNode
+  Port mapping: 8000:8000
+end note
+
+note right of OllamaNode
+  Port mapping: 11434:11434
+end note
+
+note right of TTSNode
+  Port mapping: 5002:5002
+end note
+
+note right of STTNode
+  Port mapping: 9000:9000
+end note
+
+note right of OpenWebUINode
+  Port mapping: 3000:3000
+end note
+
+' Volume mounts
+note bottom of OllamaNode
+  Volume: ./ollama-models:/root/.ollama
+end note
+
+note bottom of TTSNode
+  Volume: ./tts-models:/app/voices
+end note
+
+note bottom of STTNode
+  Volume: ./whisper-models:/app/models
+end note
+
+@enduml

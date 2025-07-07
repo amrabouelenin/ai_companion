@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Companion Voice Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>AI Companion</h1>
+            <div class="controls-container">
+                <div class="mode-selector">
+                    <label for="mode-select">Mode:</label>
+                    <select id="mode-select">
+                        <option value="general">General Assistant</option>
+                        <option value="french_tutor">French Tutor</option>
+                        <option value="motivational_coach">Motivational Coach</option>
+                        <option value="chill_buddy">Chill Buddy</option>
+                    </select>
+                </div>
+                <div class="model-selector">
+                    <label for="model-select">Model:</label>
+                    <select id="model-select">
+                        <option value="loading">Loading models...</option>
+                    </select>
+                </div>
+                <div class="voice-toggle">
+                    <label for="voice-response-toggle">Voice response:</label>
+                    <input type="checkbox" id="voice-response-toggle" checked>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="chat-container">
+                <div class="messages" id="messages">
+                    <div class="message companion">
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>Hello! I'm your AI companion How can I help you today..?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="status-indicator">
+                <span id="status">Ready</span>
+                <span id="emotion" class="emotion happy">😊</span>
+            </div>
+            <div class="controls">
+                <button id="record-button" class="record-button">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="text-input-container">
+                    <input type="text" id="text-input" placeholder="Type your message here...">
+                    <button id="send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
